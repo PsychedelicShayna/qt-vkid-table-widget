@@ -1,5 +1,5 @@
-#ifndef VKID_TABLE_DIALOG_HXX
-#define VKID_TABLE_DIALOG_HXX
+#ifndef VKID_TABLE_WIDGET_HXX
+#define VKID_TABLE_WIDGET_HXX
 
 #include <QtCore/QString>
 #include <QtCore/QList>
