@@ -1,7 +1,6 @@
-#include "vkid_table_dialog.hxx"
-#include "ui_vkid_table_dialog.h"
+#include "vkid_table_widget.hpp"
 
-const QList<QPair<QString, QString>>& VkidTableDialog::MsdnVkidTable = {
+const QList<QPair<QString, QString>> VkidTableWidget::vkidTableData = {
     { "Left Mouse Button",                      "0x01" },
     { "Right Mouse Button",                     "0x02" },
     { "Control-break Processing",               "0x03" },
@@ -174,73 +173,87 @@ const QList<QPair<QString, QString>>& VkidTableDialog::MsdnVkidTable = {
     { "Clear Key",                              "0xFE" }
 };
 
-void VkidTableDialog::applySearchFilter() {
-    const QString& search_term { ui->leditSearchFilter->text() };
+void VkidTableWidget::applySearchFilter() {
+    const QString& search_term { lineEditSearchFilter->text() };
 
-    for(qint32 i { 0 }; i < ui->tablewVkidTable->rowCount(); ui->tablewVkidTable->setRowHidden(i++, false));
+    for(qint32 i {0}; i < tableWidgetVkidTable->rowCount(); tableWidgetVkidTable->setRowHidden(i++, false));
 
     if(search_term.size()) {
-        for(qint32 i { 0 }; i < ui->tablewVkidTable->rowCount(); ++i) {
-            const QString& row_description    { ui->tablewVkidTable->item(i, 0)->text() };
-            const QString& row_vkid           { ui->tablewVkidTable->item(i, 1)->text() };
+        for(qint32 i {0}; i < tableWidgetVkidTable->rowCount(); ++i) {
+            const QString& row_description    { tableWidgetVkidTable->item(i, 0)->text() };
+            const QString& row_vkid           { tableWidgetVkidTable->item(i, 1)->text() };
 
             if(!(row_description.contains(search_term, Qt::CaseInsensitive) || row_vkid.contains(search_term, Qt::CaseInsensitive))) {
-                ui->tablewVkidTable->setRowHidden(i, true);
+                tableWidgetVkidTable->setRowHidden(i, true);
             }
         }
     }
 }
 
-void VkidTableDialog::copyItemVkid(QTableWidgetItem* item) {
-    const qint32& item_row { ui->tablewVkidTable->row(item) };
-    const QString& vkid { ui->tablewVkidTable->item(item_row, 1)->text() };
+void VkidTableWidget::copyItemVkid(QTableWidgetItem* item) {
+    const qint32& item_row { tableWidgetVkidTable->row(item)                 };
+    const QString& vkid    { tableWidgetVkidTable->item(item_row, 1)->text() };
+
     QApplication::clipboard()->setText(vkid, QClipboard::Mode::Clipboard);
 }
 
-VkidTableDialog::VkidTableDialog(QWidget* parent)
+VkidTableWidget::VkidTableWidget(QWidget* parent)
     :
-      QDialog    { parent                  },
-      ui         { new Ui::VkidTableDialog }
+      QVBoxLayout             { parent                      },
+      lineEditSearchFilter    { new QLineEdit    { parent } },
+      tableWidgetVkidTable    { new QTableWidget { parent } },
+      labelMsdnLink           { new QLabel       { parent } }
 {
-    ui->setupUi(this);
+    addWidget(lineEditSearchFilter, 0);
+    addWidget(tableWidgetVkidTable, 1);
+    addWidget(labelMsdnLink,        0);
 
-    setWindowFlags(
-                Qt::Dialog
-                | Qt::CustomizeWindowHint
-                | Qt::WindowTitleHint
-                | Qt::WindowCloseButtonHint
-                );
+    lineEditSearchFilter->setPlaceholderText("Search Filter...");
 
-    setAttribute(Qt::WA_DeleteOnClose);
+    labelMsdnLink->setTextFormat(Qt::RichText);
 
-    ui->tablewVkidTable->setRowCount(static_cast<quint32>(MsdnVkidTable.size()));
-    ui->tablewVkidTable->horizontalHeader()->resizeSection(0, 250);
-    ui->tablewVkidTable->horizontalHeader()->setStretchLastSection(true);
-    ui->tablewVkidTable->verticalHeader()->setHidden(true);
+    labelMsdnLink->setText("<a href=\"https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes\">"
+                           "<span style=\"text-decoration: underline; color:#007af4;\">"
+                           "https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes"
+                           "</span></a>");
+
+    labelMsdnLink->setOpenExternalLinks(true);
+
+    tableWidgetVkidTable->setEditTriggers(QTableWidget::NoEditTriggers);
+    tableWidgetVkidTable->setSelectionBehavior(QTableWidget::SelectRows);
+    tableWidgetVkidTable->setSelectionMode(QTableWidget::SingleSelection);
+
+    tableWidgetVkidTable->setRowCount(static_cast<quint32>(vkidTableData.size()));
+    tableWidgetVkidTable->setColumnCount(2);
+
+    tableWidgetVkidTable->setHorizontalHeaderItem(0, new QTableWidgetItem { "Description" });
+    tableWidgetVkidTable->setHorizontalHeaderItem(1, new QTableWidgetItem { "VKID"        });
+
+    tableWidgetVkidTable->horizontalHeader()->resizeSection(0, 250);
+    tableWidgetVkidTable->horizontalHeader()->setStretchLastSection(true);
+    tableWidgetVkidTable->verticalHeader()->setHidden(true);
 
     quint32 current_row { 0 };
 
-    for(const QPair<QString, QString>& vkid_desc_pair : MsdnVkidTable) {
-        const QString& vkid_description    { vkid_desc_pair.first  };
-        const QString& vkid_string         { vkid_desc_pair.second };
+    for(const QPair<QString, QString>& vkid_table_data : vkidTableData) {
+        const QString& vkid_description    { vkid_table_data.first  };
+        const QString& vkid_string         { vkid_table_data.second };
 
-        ui->tablewVkidTable->setItem(current_row, 0, new QTableWidgetItem { vkid_description });
-        ui->tablewVkidTable->setItem(current_row, 1, new QTableWidgetItem { vkid_string      });
+        tableWidgetVkidTable->setItem(current_row, 0, new QTableWidgetItem { vkid_description });
+        tableWidgetVkidTable->setItem(current_row, 1, new QTableWidgetItem { vkid_string      });
 
         ++current_row;
     }
 
-    connect(ui->tablewVkidTable,      SIGNAL(itemDoubleClicked(QTableWidgetItem*)),
-            this,                     SLOT(copyItemVkid(QTableWidgetItem*)));
+    qInfo() << tableWidgetVkidTable->columnCount() << ":" << tableWidgetVkidTable->rowCount();
 
-    connect(ui->leditSearchFilter,    SIGNAL(textEdited(const QString&)),
-            this,                     SLOT(applySearchFilter()));
+    connect(tableWidgetVkidTable,     &QTableWidget::itemDoubleClicked,
+            this,                     &VkidTableWidget::copyItemVkid);
 
-    // QSS Stylesheet
-    // ----------------------------------------------------------------------------------------------------
-    connect(ui->leditSearchFilter, &QLineEdit::textChanged, [&]() -> void { style()->polish(ui->leditSearchFilter); });
-}
+    connect(lineEditSearchFilter,     &QLineEdit::textEdited,
+            this,                     &VkidTableWidget::applySearchFilter);
 
-VkidTableDialog::~VkidTableDialog() {
-    delete ui;
+    connect(lineEditSearchFilter,     &QLineEdit::textChanged, [=]() -> void {
+        parent->style()->polish(lineEditSearchFilter);
+    });
 }
