@@ -211,6 +211,7 @@ VkidTableWidget::VkidTableWidget(QWidget* parent)
     lineEditSearchFilter->setPlaceholderText("Search Filter...");
 
     labelMsdnLink->setTextFormat(Qt::RichText);
+    labelMsdnLink->setAlignment(Qt::AlignCenter);
 
     labelMsdnLink->setText("<a href=\"https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes\">"
                            "<span style=\"text-decoration: underline; color:#007af4;\">"
