@@ -4,3 +4,6 @@
 !LICENSE
 
 !source/
+!source-impl/
+
+!*.pro
